@@ -12,11 +12,15 @@ export const CURRENCIES: Currency[] = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
 ];
 
+// Default currency to use when none is specified
+const DEFAULT_CURRENCY: Currency = CURRENCIES[0]; // USD
+
 // Format currency
-export const formatCurrency = (amount: number, currency: Currency): string => {
+export const formatCurrency = (amount: number, currency?: Currency): string => {
+  const currencyToUse = currency || DEFAULT_CURRENCY;
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: currency.code,
+    currency: currencyToUse.code,
     minimumFractionDigits: 2
   }).format(amount);
 };
