@@ -14,6 +14,12 @@ export enum ExpenseCategory {
   MISCELLANEOUS = 'Miscellaneous'
 }
 
+export interface Currency {
+  code: string;
+  symbol: string;
+  name: string;
+}
+
 export interface Expense {
   id: string;
   title: string;
@@ -35,6 +41,7 @@ export interface User {
   avatar?: string;
   isAdmin: boolean;
   familyId: string;
+  currency: Currency;
 }
 
 export interface Family {
@@ -43,6 +50,7 @@ export interface Family {
   createdAt: string;
   ownerId: string;
   members: User[];
+  defaultCurrency: Currency;
 }
 
 export interface AppState {
