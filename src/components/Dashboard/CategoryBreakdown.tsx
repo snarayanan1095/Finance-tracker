@@ -85,7 +85,7 @@ const CategoryBreakdown: React.FC = () => {
                   </div>
                   <div className="text-right">
                     <span className="text-sm font-semibold text-gray-800">
-                      {formatCurrency(data.amount)}
+                      {formatCurrency(data.amount, state.currentFamily?.defaultCurrency)}
                     </span>
                     <span className="text-xs text-gray-500 ml-1">
                       ({data.percentage.toFixed(1)}%)
