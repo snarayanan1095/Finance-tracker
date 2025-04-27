@@ -52,8 +52,8 @@ const demoExpenses: Expense[] = [
 ];
 
 const initialState: AppState = {
-  currentUser: demoUser,
-  currentFamily: demoFamily,
+  currentUser: null, // Start with no user logged in
+  currentFamily: null, // Start with no family selected
   expenses: demoExpenses,
   families: [demoFamily],
   users: [demoUser]
