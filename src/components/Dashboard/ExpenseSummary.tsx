@@ -60,7 +60,7 @@ const ExpenseSummary: React.FC = () => {
         <div>
           <p className="text-sm text-gray-500">Total Expenses</p>
           <p className="text-2xl font-semibold text-gray-800">
-            {formatCurrency(totalExpenses, state.currentFamily?.currency)}
+            {formatCurrency(totalExpenses, state.currentFamily?.defaultCurrency)}
           </p>
         </div>
       </div>
@@ -72,7 +72,7 @@ const ExpenseSummary: React.FC = () => {
         <div>
           <p className="text-sm text-gray-500">Today's Expenses</p>
           <p className="text-2xl font-semibold text-gray-800">
-            {formatCurrency(todayExpenses, state.currentFamily?.currency)}
+            {formatCurrency(todayExpenses, state.currentFamily?.defaultCurrency)}
           </p>
         </div>
       </div>
@@ -89,7 +89,7 @@ const ExpenseSummary: React.FC = () => {
           <p className="text-sm text-gray-500">This Month</p>
           <div className="flex items-baseline">
             <p className="text-2xl font-semibold text-gray-800 mr-2">
-              {formatCurrency(thisMonthExpenses, state.currentFamily?.currency)}
+              {formatCurrency(thisMonthExpenses, state.currentFamily?.defaultCurrency)}
             </p>
             {lastMonthExpenses > 0 && (
               <span className={`text-xs px-1 py-0.5 rounded ${
