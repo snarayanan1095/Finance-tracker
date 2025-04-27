@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { LogOut, Share2, Download, Upload, AlertTriangle } from 'lucide-react';
+import { LogOut, Share2, Download, Upload, AlertTriangle, DollarSign } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
+import { CURRENCIES } from '../utils/helpers';
 
 const SettingsPage: React.FC = () => {
   const { state, dispatch } = useAppContext();
@@ -26,7 +27,7 @@ const SettingsPage: React.FC = () => {
     const downloadAnchorNode = document.createElement('a');
     downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", "family-finance-data.json");
-    document.body.appendChild(downloadAnchorNode); // required for firefox
+    document.body.appendChild(downloadAnchorNode);
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
   };
@@ -36,6 +37,27 @@ const SettingsPage: React.FC = () => {
       localStorage.removeItem('expenseTrackerData');
       window.location.reload();
     }
+  };
+
+  const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newCurrency = CURRENCIES.find(c => c.code === e.target.value);
+    if (!newCurrency || !state.currentFamily) return;
+
+    // Update family's default currency
+    const updatedFamily = {
+      ...state.currentFamily,
+      defaultCurrency: newCurrency
+    };
+    dispatch({ type: 'EDIT_FAMILY', payload: updatedFamily });
+
+    // Update all family members' currency
+    state.currentFamily.members.forEach(member => {
+      const updatedMember = {
+        ...member,
+        currency: newCurrency
+      };
+      dispatch({ type: 'EDIT_USER', payload: updatedMember });
+    });
   };
   
   return (
@@ -63,6 +85,27 @@ const SettingsPage: React.FC = () => {
           <div>
             <p className="text-sm text-gray-500 mb-1">Family</p>
             <p className="text-gray-800 font-medium">{state.currentFamily?.name}</p>
+          </div>
+
+          <div>
+            <label htmlFor="currency" className="block text-sm text-gray-500 mb-1">
+              Currency
+            </label>
+            <select
+              id="currency"
+              value={state.currentFamily?.defaultCurrency.code}
+              onChange={handleCurrencyChange}
+              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm rounded-md"
+            >
+              {CURRENCIES.map(currency => (
+                <option key={currency.code} value={currency.code}>
+                  {currency.symbol} - {currency.name} ({currency.code})
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              This will update the currency for all family members
+            </p>
           </div>
           
           <div className="pt-4">
