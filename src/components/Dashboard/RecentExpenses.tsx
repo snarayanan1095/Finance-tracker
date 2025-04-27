@@ -52,7 +52,7 @@ const RecentExpenses: React.FC = () => {
                   </div>
                 </div>
                 <p className="font-semibold text-gray-800">
-                  {formatCurrency(expense.amount)}
+                  {formatCurrency(expense.amount, state.currentFamily?.currency)}
                 </p>
               </div>
             );
