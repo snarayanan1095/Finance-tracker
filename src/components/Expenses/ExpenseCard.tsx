@@ -2,6 +2,7 @@ import React from 'react';
 import { Edit, Trash2 } from 'lucide-react';
 import { Expense } from '../../types';
 import { formatCurrency, formatDate, getCategoryIcon } from '../../utils/helpers';
+import { useAppContext } from '../../context/AppContext';
 
 type ExpenseCardProps = {
   expense: Expense;
@@ -10,6 +11,7 @@ type ExpenseCardProps = {
 };
 
 const ExpenseCard: React.FC<ExpenseCardProps> = ({ expense, onEdit, onDelete }) => {
+  const { state } = useAppContext();
   const { title, amount, category, date, location } = expense;
   const CategoryIcon = getCategoryIcon(category);
 
@@ -26,7 +28,9 @@ const ExpenseCard: React.FC<ExpenseCardProps> = ({ expense, onEdit, onDelete }) 
           </div>
         </div>
         <div className="text-right">
-          <p className="font-semibold text-gray-800">{formatCurrency(amount)}</p>
+          <p className="font-semibold text-gray-800">
+            {formatCurrency(amount, state.currentFamily?.defaultCurrency)}
+          </p>
           <p className="text-xs text-gray-500">{formatDate(date)}</p>
         </div>
       </div>
