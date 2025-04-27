@@ -1,14 +1,18 @@
 import React, { createContext, useReducer, useContext, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { AppState, ActionType, User, Family, Expense, ExpenseCategory } from '../types';
+import { CURRENCIES } from '../utils/helpers';
 
 // Create initial demo data
+const defaultCurrency = CURRENCIES[0]; // USD
+
 const demoFamily: Family = {
   id: uuidv4(),
   name: 'My Family',
   createdAt: new Date().toISOString(),
   ownerId: '1',
-  members: []
+  members: [],
+  defaultCurrency
 };
 
 const demoUser: User = {
@@ -16,7 +20,8 @@ const demoUser: User = {
   name: 'John Doe',
   email: 'john@example.com',
   isAdmin: true,
-  familyId: demoFamily.id
+  familyId: demoFamily.id,
+  currency: defaultCurrency
 };
 
 // Update the demo family with the demo user
