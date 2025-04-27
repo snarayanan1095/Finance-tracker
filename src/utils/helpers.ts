@@ -1,11 +1,22 @@
 import { Coffee, Home, Car, Music, Zap, Stethoscope, BookOpen, ShoppingBag, Plane, User, Package } from 'lucide-react';
-import { ExpenseCategory } from '../types';
+import { ExpenseCategory, Currency } from '../types';
+
+export const CURRENCIES: Currency[] = [
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'GBP', symbol: '£', name: 'British Pound' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+];
 
 // Format currency
-export const formatCurrency = (amount: number): string => {
+export const formatCurrency = (amount: number, currency: Currency): string => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: currency.code,
     minimumFractionDigits: 2
   }).format(amount);
 };
