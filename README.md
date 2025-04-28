@@ -34,13 +34,13 @@ cd family-finance-tracker
 ```bash
 npm install
 ```
-
-3. Start the development server:
+3. Build: ```npx vute build```
+4. Start the development server:
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:5173](http://localhost:5173) in your browser
+5. Open [http://localhost:5173](http://localhost:5173) in your browser
 
 ## Usage
 
