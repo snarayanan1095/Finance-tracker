@@ -1,3 +1,5 @@
+import { Timestamp } from 'firebase/firestore';
+
 // Define core types for the application
 
 export enum ExpenseCategory {
@@ -20,21 +22,22 @@ export interface Currency {
   name: string;
 }
 
-export interface Expense {
+// Firestore document types
+export interface FirestoreExpense {
   id: string;
   title: string;
   amount: number;
   location: string;
-  date: string;
+  date: Timestamp;
   category: ExpenseCategory;
   notes?: string;
   userId: string;
   familyId: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
-export interface User {
+export interface FirestoreUser {
   id: string;
   name: string;
   email: string;
@@ -42,15 +45,36 @@ export interface User {
   isAdmin: boolean;
   familyId: string;
   currency: Currency;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
 }
 
-export interface Family {
+export interface FirestoreFamily {
   id: string;
   name: string;
-  createdAt: string;
+  createdAt: Timestamp;
+  updatedAt: Timestamp;
   ownerId: string;
-  members: User[];
+  memberIds: string[];
   defaultCurrency: Currency;
+}
+
+// Application state types (after conversion from Firestore)
+export interface Expense extends Omit<FirestoreExpense, 'date' | 'createdAt' | 'updatedAt'> {
+  date: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface User extends Omit<FirestoreUser, 'createdAt' | 'updatedAt'> {
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Family extends Omit<FirestoreFamily, 'createdAt' | 'updatedAt' | 'memberIds'> {
+  createdAt: string;
+  updatedAt: string;
+  members: User[];
 }
 
 export interface AppState {
@@ -62,12 +86,15 @@ export interface AppState {
 }
 
 export type ActionType = 
+  | { type: 'SET_EXPENSES'; payload: Expense[] }
   | { type: 'ADD_EXPENSE'; payload: Expense }
   | { type: 'EDIT_EXPENSE'; payload: Expense }
   | { type: 'DELETE_EXPENSE'; payload: string }
+  | { type: 'SET_USERS'; payload: User[] }
   | { type: 'ADD_USER'; payload: User }
   | { type: 'EDIT_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: string }
+  | { type: 'SET_FAMILIES'; payload: Family[] }
   | { type: 'ADD_FAMILY'; payload: Family }
   | { type: 'EDIT_FAMILY'; payload: Family }
   | { type: 'DELETE_FAMILY'; payload: string }

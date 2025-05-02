@@ -2,11 +2,13 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, DollarSign, Users, BarChart, Settings, LogOut } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
+import { auth } from '../../config/firebase';
+import { signOut } from 'firebase/auth';
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { state, dispatch } = useAppContext();
+  const { state } = useAppContext();
 
   const menuItems = [
     { title: 'Dashboard', icon: <Home size={20} />, path: '/' },
@@ -16,18 +18,22 @@ const Sidebar: React.FC = () => {
     { title: 'Settings', icon: <Settings size={20} />, path: '/settings' },
   ];
 
-  const handleLogout = () => {
-    dispatch({ type: 'SET_CURRENT_USER', payload: null });
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
-    <div className="hidden md:flex flex-col h-screen bg-white border-r border-gray-200 w-64 p-4">
+    <div className="hidden md:flex flex-col h-screen bg-gray-900 border-r border-gray-700 w-64 p-4">
       <div className="flex items-center space-x-2 mb-8">
         <div className="bg-teal-500 p-2 rounded">
           <DollarSign className="text-white" size={24} />
         </div>
-        <h1 className="text-xl font-bold text-gray-800">FamilyFinance</h1>
+        <h1 className="text-xl font-bold text-white">FamilyFinance</h1>
       </div>
       
       <div className="flex-1">
@@ -39,8 +45,8 @@ const Sidebar: React.FC = () => {
                   onClick={() => navigate(item.path)}
                   className={`flex items-center w-full p-3 rounded-lg transition-colors ${
                     location.pathname === item.path
-                      ? 'bg-teal-50 text-teal-600'
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'bg-teal-600/20 text-teal-400'
+                      : 'text-gray-300 hover:bg-gray-800'
                   }`}
                 >
                   <span className="mr-3">{item.icon}</span>
@@ -53,19 +59,19 @@ const Sidebar: React.FC = () => {
       </div>
 
       {state.currentUser && (
-        <div className="mt-auto pt-4 border-t border-gray-200">
+        <div className="mt-auto pt-4 border-t border-gray-700">
           <div className="flex items-center mb-4">
-            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 font-bold mr-3">
+            <div className="w-10 h-10 rounded-full bg-teal-600/20 flex items-center justify-center text-teal-400 font-bold mr-3">
               {state.currentUser.name.charAt(0)}
             </div>
             <div>
-              <p className="font-medium text-gray-800">{state.currentUser.name}</p>
-              <p className="text-xs text-gray-500">{state.currentUser.email}</p>
+              <p className="font-medium text-white">{state.currentUser.name}</p>
+              <p className="text-xs text-gray-400">{state.currentUser.email}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center w-full p-3 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
+            className="flex items-center w-full p-3 rounded-lg text-gray-300 hover:bg-gray-800 transition-colors"
           >
             <span className="mr-3"><LogOut size={20} /></span>
             <span className="font-medium">Logout</span>

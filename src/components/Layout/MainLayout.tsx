@@ -1,20 +1,27 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import MobileNav from './MobileNav';
-import { useAppContext } from '../../context/AppContext';
-import LoginPage from '../../pages/Login';
+import { useAuth } from '../../context/AuthContext';
 
 const MainLayout: React.FC = () => {
-  const { state } = useAppContext();
+  const { currentUser, loading } = useAuth();
 
-  // If there's no current user, show the login page
-  if (!state.currentUser) {
-    return <LoginPage />;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+      </div>
+    );
+  }
+
+  // If there's no current user, redirect to login
+  if (!currentUser) {
+    return <Navigate to="/login" />;
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-900">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">

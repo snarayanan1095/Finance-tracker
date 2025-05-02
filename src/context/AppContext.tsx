@@ -1,71 +1,37 @@
-import React, { createContext, useReducer, useContext, useEffect } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import { AppState, ActionType, User, Family, Expense, ExpenseCategory } from '../types';
-import { CURRENCIES } from '../utils/helpers';
-
-// Create initial demo data
-const defaultCurrency = CURRENCIES[0]; // USD
-
-const demoFamily: Family = {
-  id: uuidv4(),
-  name: 'My Family',
-  createdAt: new Date().toISOString(),
-  ownerId: '1',
-  members: [],
-  defaultCurrency
-};
-
-const demoUser: User = {
-  id: '1',
-  name: 'John Doe',
-  email: 'john@example.com',
-  isAdmin: true,
-  familyId: demoFamily.id,
-  currency: defaultCurrency
-};
-
-// Update the demo family with the demo user
-demoFamily.members = [demoUser];
-
-// Create demo expenses
-const demoExpenses: Expense[] = [
-  {
-    id: uuidv4(),
-    title: 'Grocery Shopping',
-    amount: 120.50,
-    location: 'Whole Foods',
-    date: new Date().toISOString().split('T')[0],
-    category: ExpenseCategory.FOOD,
-    notes: 'Weekly grocery run',
-    userId: demoUser.id,
-    familyId: demoFamily.id,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: uuidv4(),
-    title: 'Gas',
-    amount: 45.75,
-    location: 'Shell',
-    date: new Date().toISOString().split('T')[0],
-    category: ExpenseCategory.TRANSPORTATION,
-    userId: demoUser.id,
-    familyId: demoFamily.id,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  }
-];
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { AppState, ActionType, User, Family, Expense } from '../types';
+import {
+  getUser,
+  getFamily,
+  getExpenses,
+  subscribeToFamily,
+  subscribeToExpenses
+} from '../services/firebase';
 
 const initialState: AppState = {
-  currentUser: null, // Start with no user logged in
-  currentFamily: null, // Start with no family selected
-  expenses: demoExpenses,
-  families: [demoFamily],
-  users: [demoUser]
+  currentUser: null,
+  currentFamily: null,
+  expenses: [],
+  families: [],
+  users: []
 };
+
+const AppContext = createContext<{
+  state: AppState;
+  dispatch: React.Dispatch<ActionType>;
+}>({
+  state: initialState,
+  dispatch: () => null
+});
 
 const appReducer = (state: AppState, action: ActionType): AppState => {
   switch (action.type) {
+    case 'SET_EXPENSES':
+      return {
+        ...state,
+        expenses: action.payload
+      };
     case 'ADD_EXPENSE':
       return {
         ...state,
@@ -74,7 +40,7 @@ const appReducer = (state: AppState, action: ActionType): AppState => {
     case 'EDIT_EXPENSE':
       return {
         ...state,
-        expenses: state.expenses.map(expense => 
+        expenses: state.expenses.map(expense =>
           expense.id === action.payload.id ? action.payload : expense
         )
       };
@@ -83,44 +49,33 @@ const appReducer = (state: AppState, action: ActionType): AppState => {
         ...state,
         expenses: state.expenses.filter(expense => expense.id !== action.payload)
       };
+    case 'SET_USERS':
+      return {
+        ...state,
+        users: action.payload
+      };
     case 'ADD_USER':
       return {
         ...state,
-        users: [...state.users, action.payload],
-        families: state.families.map(family => 
-          family.id === action.payload.familyId 
-            ? { ...family, members: [...family.members, action.payload] }
-            : family
-        )
+        users: [...state.users, action.payload]
       };
     case 'EDIT_USER':
       return {
         ...state,
-        users: state.users.map(user => 
+        users: state.users.map(user =>
           user.id === action.payload.id ? action.payload : user
         ),
-        families: state.families.map(family => 
-          family.id === action.payload.familyId 
-            ? { 
-                ...family, 
-                members: family.members.map(member => 
-                  member.id === action.payload.id ? action.payload : member
-                ) 
-              }
-            : family
-        ),
-        currentUser: state.currentUser?.id === action.payload.id 
-          ? action.payload 
-          : state.currentUser
+        currentUser: state.currentUser?.id === action.payload.id ? action.payload : state.currentUser
       };
     case 'DELETE_USER':
       return {
         ...state,
-        users: state.users.filter(user => user.id !== action.payload),
-        families: state.families.map(family => ({
-          ...family,
-          members: family.members.filter(member => member.id !== action.payload)
-        }))
+        users: state.users.filter(user => user.id !== action.payload)
+      };
+    case 'SET_FAMILIES':
+      return {
+        ...state,
+        families: action.payload
       };
     case 'ADD_FAMILY':
       return {
@@ -130,21 +85,15 @@ const appReducer = (state: AppState, action: ActionType): AppState => {
     case 'EDIT_FAMILY':
       return {
         ...state,
-        families: state.families.map(family => 
+        families: state.families.map(family =>
           family.id === action.payload.id ? action.payload : family
         ),
-        currentFamily: state.currentFamily?.id === action.payload.id 
-          ? action.payload 
-          : state.currentFamily
+        currentFamily: state.currentFamily?.id === action.payload.id ? action.payload : state.currentFamily
       };
     case 'DELETE_FAMILY':
       return {
         ...state,
-        families: state.families.filter(family => family.id !== action.payload),
-        expenses: state.expenses.filter(expense => expense.familyId !== action.payload),
-        currentFamily: state.currentFamily?.id === action.payload 
-          ? null 
-          : state.currentFamily
+        families: state.families.filter(family => family.id !== action.payload)
       };
     case 'SET_CURRENT_USER':
       return {
@@ -163,36 +112,72 @@ const appReducer = (state: AppState, action: ActionType): AppState => {
   }
 };
 
-// Create context
-const AppContext = createContext<{
-  state: AppState;
-  dispatch: React.Dispatch<ActionType>;
-}>({
-  state: initialState,
-  dispatch: () => null
-});
-
-// Create provider component
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
+  const { currentUser: authUser } = useAuth();
 
-  // Load data from localStorage on app initialization
+  // Load initial data when auth user changes
   useEffect(() => {
-    const savedData = localStorage.getItem('expenseTrackerData');
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        dispatch({ type: 'LOAD_DATA', payload: parsedData });
-      } catch (error) {
-        console.error('Failed to parse saved data:', error);
+    const loadInitialData = async () => {
+      if (!authUser) {
+        dispatch({ type: 'LOAD_DATA', payload: initialState });
+        return;
       }
-    }
-  }, []);
 
-  // Save data to localStorage whenever state changes
+      try {
+        // Get user data
+        const userData = await getUser(authUser.uid);
+        if (!userData) return;
+
+        dispatch({ type: 'SET_CURRENT_USER', payload: userData });
+
+        // Get family data
+        const familyData = await getFamily(userData.familyId);
+        if (!familyData) return;
+
+        dispatch({ type: 'SET_CURRENT_FAMILY', payload: familyData });
+
+        // Get expenses
+        const expenses = await getExpenses(userData.familyId);
+        dispatch({ type: 'SET_EXPENSES', payload: expenses });
+
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      }
+    };
+
+    loadInitialData();
+  }, [authUser]);
+
+  // Subscribe to real-time updates when family is set
   useEffect(() => {
-    localStorage.setItem('expenseTrackerData', JSON.stringify(state));
-  }, [state]);
+    if (!state.currentFamily) return;
+
+    const familyUnsubscribe = subscribeToFamily(
+      state.currentFamily.id,
+      (family) => {
+        dispatch({ type: 'SET_CURRENT_FAMILY', payload: family });
+      },
+      (error) => {
+        console.error('Family subscription error:', error);
+      }
+    );
+
+    const expensesUnsubscribe = subscribeToExpenses(
+      state.currentFamily.id,
+      (expenses) => {
+        dispatch({ type: 'SET_EXPENSES', payload: expenses });
+      },
+      (error) => {
+        console.error('Expenses subscription error:', error);
+      }
+    );
+
+    return () => {
+      familyUnsubscribe();
+      expensesUnsubscribe();
+    };
+  }, [state.currentFamily?.id]);
 
   return (
     <AppContext.Provider value={{ state, dispatch }}>
@@ -201,5 +186,4 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 };
 
-// Custom hook to use the context
 export const useAppContext = () => useContext(AppContext);
