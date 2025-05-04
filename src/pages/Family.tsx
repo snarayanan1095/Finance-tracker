@@ -130,6 +130,26 @@ const FamilyPage: React.FC = () => {
               </button>
             </div>
           </div>
+
+          <div className="bg-white bg-opacity-10 shadow rounded-lg p-6 mt-6">
+            <h2 className="text-lg font-semibold mb-2 text-white">Family Members</h2>
+            <ul>
+              {state.currentFamily?.members.map(member => (
+                <li key={member.id} className="py-2 border-b border-gray-700 last:border-b-0 flex flex-col sm:flex-row sm:items-center sm:justify-between text-white">
+                  <span>
+                    <span className="font-medium text-white">{member.name}</span>
+                    <span className="ml-2 text-gray-300 text-sm">{member.email}</span>
+                  </span>
+                  {member.id === state.currentFamily?.ownerId && (
+                    <span className="ml-2 text-xs bg-teal-700 text-white px-2 py-0.5 rounded">Owner</span>
+                  )}
+                  {member.isAdmin && member.id !== state.currentFamily?.ownerId && (
+                    <span className="ml-2 text-xs bg-blue-700 text-white px-2 py-0.5 rounded">Admin</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       ) : (
         <div className="space-y-8">
