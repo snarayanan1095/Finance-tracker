@@ -1,5 +1,5 @@
 import { Coffee, Home, Car, Music, Zap, Stethoscope, BookOpen, ShoppingBag, Plane, User, Package } from 'lucide-react';
-import { ExpenseCategory, Currency } from '../types';
+import { ExpenseCategory, Currency, Expense } from '../types';
 
 export const CURRENCIES: Currency[] = [
   { code: 'USD', symbol: '$', name: 'US Dollar' },
@@ -35,8 +35,8 @@ export const formatDate = (dateString: string): string => {
 };
 
 // Group expenses by date
-export const groupExpensesByDate = (expenses: any[]) => {
-  return expenses.reduce((groups: Record<string, any[]>, expense) => {
+export const groupExpensesByDate = (expenses: Expense[]): Record<string, Expense[]> => {
+  return expenses.reduce((groups: Record<string, Expense[]>, expense: Expense) => {
     const date = expense.date;
     if (!groups[date]) {
       groups[date] = [];

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { AppState, ActionType, User, Family, Expense } from '../types';
+import { AppState, ActionType } from '../types';
 import {
   getUser,
   getFamily,
@@ -14,7 +14,8 @@ const initialState: AppState = {
   currentFamily: null,
   expenses: [],
   families: [],
-  users: []
+  users: [],
+  loading: false
 };
 
 const AppContext = createContext<{

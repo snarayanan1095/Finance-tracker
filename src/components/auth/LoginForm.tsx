@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { auth } from '../../config/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 
 const LoginForm: React.FC = () => {
@@ -16,13 +15,13 @@ const LoginForm: React.FC = () => {
 
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await auth.createUserWithEmailAndPassword(email, password);
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        await auth.signInWithEmailAndPassword(email, password);
       }
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(`Please notify shwethasogathur@gmail.com. Error: ${err instanceof Error ? err.message : err}`);
     }
   };
 

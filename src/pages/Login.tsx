@@ -1,27 +1,10 @@
-import React, { useState } from 'react';
-import { DollarSign, Home, Users, Wallet } from 'lucide-react';
+import { useState } from 'react';
+import { Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { auth, db } from '../config/firebase';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword,
-  updateProfile
-} from 'firebase/auth';
-import { 
-  collection, 
-  addDoc,
-  query,
-  where,
-  getDocs,
-  serverTimestamp,
-  updateDoc
-} from 'firebase/firestore';
-import { User, Family } from '../types';
+import { signIn, signUp, createUserDocument, createFamilyDocument, updateFamilyMembers } from '../services/firebase';
 import { CURRENCIES } from '../utils/helpers';
 
 const LoginPage: React.FC = () => {
-  const { currentUser } = useAuth();
   const navigate = useNavigate();
   
   const [isLogin, setIsLogin] = useState(true);
@@ -63,85 +46,52 @@ const LoginPage: React.FC = () => {
     try {
       if (isLogin) {
         // Sign in
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // Get user's family information
-        const usersRef = collection(db, 'users');
-        const q = query(usersRef, where('id', '==', user.uid));
-        const querySnapshot = await getDocs(q);
+        await signIn(email, password);
         
-        if (!querySnapshot.empty) {
-          const userData = querySnapshot.docs[0].data();
-          // User exists, navigate to home
-          navigate('/');
-        } else {
-          setErrors({ email: 'User data not found. Please try again.' });
-        }
+        // After sign in, just navigate to home (user data will be loaded by context)
+        navigate('/');
       } else {
         // Create new account
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // Update profile with name
-        await updateProfile(user, { displayName: name });
+        const user = await signUp(email, password, name);
 
         let familyRef;
         if (isJoiningFamily) {
           // Join existing family
-          const familiesRef = collection(db, 'families');
-          const q = query(familiesRef, where('id', '==', joinFamilyId));
-          const querySnapshot = await getDocs(q);
-          
-          if (!querySnapshot.empty) {
-            familyRef = querySnapshot.docs[0].ref;
-            // Update family members
-            await updateDoc(familyRef, {
-              memberIds: [...querySnapshot.docs[0].data().memberIds, user.uid],
-              updatedAt: serverTimestamp()
-            });
-          } else {
-            throw new Error('Family not found');
-          }
+          familyRef = await updateFamilyMembers(joinFamilyId, user.uid);
         } else {
           // Create new family
-          const familyData = {
+          familyRef = await createFamilyDocument({
             name: familyName,
             ownerId: user.uid,
             memberIds: [user.uid],
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
             defaultCurrency: CURRENCIES[0]
-          };
-          familyRef = await addDoc(collection(db, 'families'), familyData);
+          });
         }
 
         // Create user document
-        const userData = {
+        await createUserDocument({
           id: user.uid,
           name,
           email: user.email,
           isAdmin: !isJoiningFamily, // Only admin if creating new family
           familyId: familyRef.id,
-          currency: CURRENCIES[0],
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        };
+          currency: CURRENCIES[0]
+        });
 
-        await addDoc(collection(db, 'users'), userData);
         navigate('/');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Auth error:', error);
-      
-      if (error.code === 'auth/email-already-in-use') {
-        setErrors({ email: 'This email is already registered. Please sign in instead.' });
-      } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        setErrors({ email: 'Invalid email or password.' });
-      } else if (error.message === 'Family not found') {
-        setErrors({ joinFamilyId: 'Family not found. Please check the Family ID.' });
+      const err = error as any;
+      const errorMsg = `Please notify shwethasogathur@gmail.com. Error: ${err && err.message ? err.message : err}`;
+      if (err.code === 'auth/email-already-in-use') {
+        setErrors({ email: `This email is already registered. Please sign in instead. ${errorMsg}` });
+      } else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+        setErrors({ email: `Invalid email or password. ${errorMsg}` });
+      } else if (err.message === 'Family not found') {
+        setErrors({ joinFamilyId: `Family not found. Please check the Family ID. ${errorMsg}` });
       } else {
-        setErrors({ email: 'An error occurred. Please try again.' });
+        setErrors({ email: `An error occurred. ${errorMsg}` });
       }
     } finally {
       setLoading(false);

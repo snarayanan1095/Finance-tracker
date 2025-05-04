@@ -4,21 +4,11 @@ import { useAppContext } from '../../context/AppContext';
 import { useAuth } from '../../context/AuthContext';
 import { User as AppUser } from '../../types';
 import { db } from '../../config/firebase';
-import { 
-  collection, 
-  query, 
-  where, 
-  getDocs, 
-  updateDoc, 
-  doc, 
-  arrayRemove,
-  arrayUnion,
-  addDoc,
-  serverTimestamp
-} from 'firebase/firestore';
+import firebase from 'firebase';
 
 const FamilyMembers: React.FC = () => {
-  const { currentFamily, setCurrentFamily } = useAppContext();
+  const { state } = useAppContext();
+  const currentFamily = state.currentFamily;
   const { currentUser: firebaseUser } = useAuth();
   const [showAddMember, setShowAddMember] = useState(false);
   const [newMember, setNewMember] = useState({
@@ -41,19 +31,17 @@ const FamilyMembers: React.FC = () => {
       }
 
       try {
-        const userDoc = await getDocs(query(
-          collection(db, 'users'),
-          where('id', '==', firebaseUser.uid)
-        ));
-
-        if (!userDoc.empty) {
+        const userQuery = db.collection('users').where('id', '==', firebaseUser.uid);
+        const userSnapshot = await userQuery.get();
+        if (!userSnapshot.empty) {
           setCurrentUser({
-            id: userDoc.docs[0].id,
-            ...userDoc.docs[0].data()
+            id: userSnapshot.docs[0].id,
+            ...userSnapshot.docs[0].data()
           } as AppUser);
         }
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error loading current user:', error);
+        alert(`Failed to load current user. Please notify shwethasogathur@gmail.com. Error: ${error instanceof Error ? error.message : error}`);
       }
     };
 
@@ -62,6 +50,7 @@ const FamilyMembers: React.FC = () => {
 
   useEffect(() => {
     loadMembers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFamily]);
 
   const loadMembers = async () => {
@@ -69,18 +58,16 @@ const FamilyMembers: React.FC = () => {
 
     try {
       setLoading(true);
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('familyId', '==', currentFamily.id));
-      const querySnapshot = await getDocs(q);
-      
+      const usersQuery = db.collection('users').where('familyId', '==', currentFamily.id);
+      const querySnapshot = await usersQuery.get();
       const loadedMembers = querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as AppUser[];
-
       setMembers(loadedMembers);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error loading family members:', error);
+      alert(`Failed to load family members. Please notify shwethasogathur@gmail.com. Error: ${error instanceof Error ? error.message : error}`);
     } finally {
       setLoading(false);
     }
@@ -88,20 +75,16 @@ const FamilyMembers: React.FC = () => {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    
     if (!newMember.name.trim()) newErrors.name = 'Name is required';
     if (!newMember.email.trim()) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(newMember.email)) newErrors.email = 'Email is invalid';
-    
-    // Check if email already exists
     if (
-      newMember.email && 
-      !newErrors.email && 
+      newMember.email &&
+      !newErrors.email &&
       members.some(member => member.email.toLowerCase() === newMember.email.toLowerCase())
     ) {
       newErrors.email = 'A member with this email already exists';
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -109,15 +92,12 @@ const FamilyMembers: React.FC = () => {
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentFamily || !currentUser) return;
-    
     if (!validateForm()) return;
-
     try {
       setInvitingMember(true);
-
       // Create invitation in Firestore
-      const invitationsRef = collection(db, 'invitations');
-      await addDoc(invitationsRef, {
+      const invitationsRef = db.collection('invitations');
+      await invitationsRef.add({
         familyId: currentFamily.id,
         familyName: currentFamily.name,
         invitedEmail: newMember.email.toLowerCase(),
@@ -126,29 +106,20 @@ const FamilyMembers: React.FC = () => {
         invitedByName: currentUser.name,
         isAdmin: newMember.isAdmin,
         status: 'pending',
-        createdAt: serverTimestamp()
+        createdAt: new Date()
       });
-
       // Update family with pending invitation
-      const familyRef = doc(db, 'families', currentFamily.id);
-      await updateDoc(familyRef, {
-        pendingInvites: arrayUnion(newMember.email.toLowerCase()),
-        updatedAt: serverTimestamp()
+      const familyRef = db.collection('families').doc(currentFamily.id);
+      await familyRef.update({
+        pendingInvites: firebase.firestore.FieldValue.arrayUnion(newMember.email.toLowerCase()),
+        updatedAt: new Date()
       });
-
-      // Reset form
-      setNewMember({
-        name: '',
-        email: '',
-        isAdmin: false
-      });
+      setNewMember({ name: '', email: '', isAdmin: false });
       setShowAddMember(false);
-
-      // Show success message
       alert(`Invitation sent to ${newMember.email}`);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error inviting family member:', error);
-      alert('Failed to send invitation. Please try again.');
+      alert(`Failed to send invitation. Please notify shwethasogathur@gmail.com. Error: ${error instanceof Error ? error.message : error}`);
     } finally {
       setInvitingMember(false);
     }
@@ -156,85 +127,66 @@ const FamilyMembers: React.FC = () => {
 
   const handleRemoveMember = async (memberId: string) => {
     if (!currentFamily || !currentUser) return;
-
-    // Check if user has permission to remove members
     if (!currentUser.isAdmin && currentUser.id !== currentFamily.ownerId) {
       alert("You don't have permission to remove members.");
       return;
     }
-
     if (members.length <= 1) {
       alert("You can't remove the last member of a family.");
       return;
     }
-    
     if (memberId === currentUser.id) {
       alert("You can't remove yourself. Use the 'Leave Family' option instead.");
       return;
     }
-
-    // Check if trying to remove the owner
     const memberToRemove = members.find(m => m.id === memberId);
     if (memberToRemove && memberToRemove.id === currentFamily.ownerId) {
       alert("You can't remove the family owner.");
       return;
     }
-    
     if (window.confirm('Are you sure you want to remove this member?')) {
       try {
-        const familyRef = doc(db, 'families', currentFamily.id);
-        await updateDoc(familyRef, {
-          memberIds: arrayRemove(memberId),
-          updatedAt: serverTimestamp()
+        const familyRef = db.collection('families').doc(currentFamily.id);
+        await familyRef.update({
+          memberIds: firebase.firestore.FieldValue.arrayRemove(memberId),
+          updatedAt: new Date()
         });
-
-        // Update the user's familyId
-        const userRef = doc(db, 'users', memberId);
-        await updateDoc(userRef, {
+        const userRef = db.collection('users').doc(memberId);
+        await userRef.update({
           familyId: null,
           isAdmin: false,
-          updatedAt: serverTimestamp()
+          updatedAt: new Date()
         });
-
-        // Reload members
         await loadMembers();
-      } catch (error) {
+      } catch (error: unknown) {
         console.error('Error removing family member:', error);
-        alert('Failed to remove member. Please try again.');
+        alert(`Failed to remove member. Please notify shwethasogathur@gmail.com. Error: ${error instanceof Error ? error.message : error}`);
       }
     }
   };
 
   const handleToggleAdmin = async (memberId: string) => {
     if (!currentFamily || !currentUser) return;
-
-    // Only family owner can change admin status
     if (currentUser.id !== currentFamily.ownerId) {
       alert("Only the family owner can change admin status.");
       return;
     }
-
-    // Can't change owner's admin status
     if (memberId === currentFamily.ownerId) {
       alert("Can't change the owner's admin status.");
       return;
     }
-
     const member = members.find(m => m.id === memberId);
     if (!member) return;
-
     try {
-      const userRef = doc(db, 'users', memberId);
-      await updateDoc(userRef, {
+      const userRef = db.collection('users').doc(memberId);
+      await userRef.update({
         isAdmin: !member.isAdmin,
-        updatedAt: serverTimestamp()
+        updatedAt: new Date()
       });
-
-      // Reload members
       await loadMembers();
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error toggling admin status:', error);
-      alert('Failed to update admin status. Please try again.');
+      alert(`Failed to update admin status. Please notify shwethasogathur@gmail.com. Error: ${error instanceof Error ? error.message : error}`);
     }
   };
 
@@ -266,7 +218,6 @@ const FamilyMembers: React.FC = () => {
           </button>
         )}
       </div>
-      
       {showAddMember && (
         <form onSubmit={handleAddMember} className="mb-6 p-4 bg-gray-50 rounded-lg">
           <div className="space-y-4">
@@ -280,14 +231,11 @@ const FamilyMembers: React.FC = () => {
                 name="name"
                 value={newMember.name}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
-                } focus:outline-none focus:ring-2 focus:ring-teal-500`}
+                className={`w-full px-3 py-2 border rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-teal-500`}
                 placeholder="Enter name"
               />
               {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
             </div>
-            
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email
@@ -298,14 +246,11 @@ const FamilyMembers: React.FC = () => {
                 name="email"
                 value={newMember.email}
                 onChange={handleChange}
-                className={`w-full px-3 py-2 border rounded-md ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                } focus:outline-none focus:ring-2 focus:ring-teal-500`}
+                className={`w-full px-3 py-2 border rounded-md ${errors.email ? 'border-red-500' : 'border-gray-300'} focus:outline-none focus:ring-2 focus:ring-teal-500`}
                 placeholder="Enter email"
               />
               {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email}</p>}
             </div>
-            
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -320,7 +265,6 @@ const FamilyMembers: React.FC = () => {
               </label>
             </div>
           </div>
-          
           <div className="mt-4 flex space-x-3">
             <button
               type="button"
@@ -340,7 +284,6 @@ const FamilyMembers: React.FC = () => {
           </div>
         </form>
       )}
-      
       <div className="space-y-3">
         {members.map((member) => (
           <div 
@@ -368,7 +311,6 @@ const FamilyMembers: React.FC = () => {
                 <div className="text-sm text-gray-500">{member.email}</div>
               </div>
             </div>
-            
             <div className="flex items-center space-x-2">
               {isOwner && member.id !== currentFamily.ownerId && (
                 <button

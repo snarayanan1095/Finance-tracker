@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User } from 'firebase/auth';
+import firebase from 'firebase';
 import { auth } from '../config/firebase';
 
 interface AuthContextType {
-  currentUser: User | null;
+  currentUser: firebase.User | null;
   loading: boolean;
 }
 
@@ -15,7 +15,7 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('Auth state changed:', user?.email);
       setCurrentUser(user);
       setLoading(false);
-    }, (error) => {
+    }, (error: unknown) => {
       console.error("Auth state change error:", error);
       setLoading(false);
     });

@@ -1,6 +1,4 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import firebase from 'firebase';
 
 // Your web app's Firebase configuration
 // Replace these with your Firebase project configuration
@@ -12,12 +10,13 @@ const firebaseConfig = {
     messagingSenderId: "870365046438",
     appId: "1:870365046438:web:234119fa5dfe49ac173667",
     measurementId: "G-Z34N6N2YZX"
-  };
+};
+
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const app = firebase.initializeApp(firebaseConfig);
 
 // Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const auth = firebase.auth();
+export const db = firebase.firestore();
 
 export default app; 

@@ -1,199 +1,198 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
+import { Copy, Check } from 'lucide-react';
+import { createFamilyWithMember, joinFamilyByCode } from '../services/firebase';
 import { useAuth } from '../context/AuthContext';
-import { addDoc, collection, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
-import { db } from '../config/firebase';
-import { Family, User } from '../types';
 import { CURRENCIES } from '../utils/helpers';
 
-// Interface for the Firestore family document
-interface FamilyDoc {
-  name: string;
-  ownerId: string;
-  memberIds: string[];
-  createdAt: string;
-  updatedAt: string;
-  defaultCurrency: typeof CURRENCIES[0];
-}
-
 const FamilyPage: React.FC = () => {
-  const { currentFamily, loading, setCurrentFamily } = useAppContext();
-  const { currentUser } = useAuth();
-  const [newFamilyName, setNewFamilyName] = useState('');
+  const { state, dispatch } = useAppContext();
+  const { currentUser: firebaseUser } = useAuth();
+  const [copiedCode, setCopiedCode] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [familyName, setFamilyName] = useState('');
+  const [currency, setCurrency] = useState(CURRENCIES[0]);
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState('');
 
-  const createFamily = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser) return;
-
-    try {
-      // Create the initial family member
-      const initialMember: User = {
-        id: currentUser.uid,
-        name: currentUser.displayName || 'Anonymous',
-        email: currentUser.email || '',
-        isAdmin: true,
-        familyId: '',  // Will be updated after family creation
-        currency: CURRENCIES[0]
-      };
-
-      // Create the family document
-      const familyData: FamilyDoc = {
-        name: newFamilyName,
-        ownerId: currentUser.uid,
-        memberIds: [currentUser.uid],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        defaultCurrency: CURRENCIES[0]
-      };
-
-      const docRef = await addDoc(collection(db, 'families'), familyData);
-      
-      // Create the Family object with the member
-      const newFamily: Family = {
-        id: docRef.id,
-        name: familyData.name,
-        ownerId: familyData.ownerId,
-        members: [initialMember],
-        createdAt: familyData.createdAt,
-        defaultCurrency: familyData.defaultCurrency
-      };
-
-      setCurrentFamily(newFamily);
-      setNewFamilyName('');
-      setError('');
-    } catch (err) {
-      setError('Failed to create family');
-      console.error('Error creating family:', err);
+  const handleCopyCode = () => {
+    if (state.currentFamily?.joinCode) {
+      navigator.clipboard.writeText(state.currentFamily.joinCode);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 1500);
     }
   };
 
-  const joinFamily = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!currentUser) return;
+  const handleCopyId = () => {
+    if (state.currentFamily?.id) {
+      navigator.clipboard.writeText(state.currentFamily.id);
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 1500);
+    }
+  };
 
+  const handleCreateFamily = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!familyName.trim() || !firebaseUser) return;
+    setCreating(true);
     try {
-      const familyRef = doc(db, 'families', joinCode);
-      await updateDoc(familyRef, {
-        memberIds: arrayUnion(currentUser.uid),
-        updatedAt: new Date().toISOString()
+      const family = await createFamilyWithMember(
+        {
+          name: familyName.trim(),
+          ownerId: firebaseUser.uid,
+          defaultCurrency: currency,
+        },
+        {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || firebaseUser.email || 'User',
+          email: firebaseUser.email,
+        }
+      );
+      dispatch({ type: 'SET_CURRENT_FAMILY', payload: family });
+      setFamilyName('');
+    } catch (err: any) {
+      setError(err.message || 'Failed to create family.');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleJoinFamily = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    if (!joinCode.trim() || !firebaseUser) return;
+    setJoining(true);
+    try {
+      const family = await joinFamilyByCode(joinCode.trim(), {
+        id: firebaseUser.uid,
+        name: firebaseUser.displayName || firebaseUser.email || 'User',
+        email: firebaseUser.email,
       });
-
-      // Fetch the updated family data
-      const familyDoc = await getDoc(familyRef);
-      if (familyDoc.exists()) {
-        const familyData = familyDoc.data() as FamilyDoc;
-        
-        // Create the current user object
-        const member: User = {
-          id: currentUser.uid,
-          name: currentUser.displayName || 'Anonymous',
-          email: currentUser.email || '',
-          isAdmin: false,
-          familyId: familyDoc.id,
-          currency: familyData.defaultCurrency
-        };
-
-        // Create the Family object
-        const family: Family = {
-          id: familyDoc.id,
-          name: familyData.name,
-          ownerId: familyData.ownerId,
-          members: [member], // We only add the current user for now
-          createdAt: familyData.createdAt,
-          defaultCurrency: familyData.defaultCurrency
-        };
-
-        setCurrentFamily(family);
-      }
-
+      dispatch({ type: 'SET_CURRENT_FAMILY', payload: family });
       setJoinCode('');
-      setError('');
-    } catch (err) {
-      setError('Failed to join family. Please check the family code.');
-      console.error('Error joining family:', err);
+    } catch (err: any) {
+      setError(err.message || 'Failed to join family.');
+    } finally {
+      setJoining(false);
     }
   };
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Family Management</h1>
-
-      {currentFamily ? (
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Your Family</h2>
-          <div className="mb-4">
-            <p className="text-gray-600">Name: {currentFamily.name}</p>
-            <p className="text-gray-600">Family ID: {currentFamily.id}</p>
-            <p className="text-gray-600">Members: {currentFamily.members.length}</p>
+      <h1 className="text-2xl font-bold mb-6 text-white">Family Information</h1>
+      {state.currentFamily ? (
+        <div className="space-y-4">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Family ID</h2>
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-mono bg-gray-50 px-3 py-2 rounded">{state.currentFamily.id}</span>
+              <button
+                onClick={handleCopyId}
+                className="ml-4 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none flex items-center"
+              >
+                {copiedId ? (
+                  <>
+                    <Check size={16} className="mr-1" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={16} className="mr-1" />
+                    Copy ID
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-          <div className="bg-gray-50 p-4 rounded-md">
-            <p className="text-sm text-gray-500">Share this Family ID with family members:</p>
-            <p className="text-lg font-mono mt-2">{currentFamily.id}</p>
+
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2">Join Code</h2>
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-mono bg-gray-50 px-3 py-2 rounded">{state.currentFamily.joinCode}</span>
+              <button
+                onClick={handleCopyCode}
+                className="ml-4 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none flex items-center"
+              >
+                {copiedCode ? (
+                  <>
+                    <Check size={16} className="mr-1" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy size={16} className="mr-1" />
+                    Copy Code
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Create Family Form */}
           <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Create New Family</h2>
-            <form onSubmit={createFamily} className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">Create a Family</h2>
+            <form onSubmit={handleCreateFamily} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Family Name
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Family Name</label>
                 <input
                   type="text"
-                  value={newFamilyName}
-                  onChange={(e) => setNewFamilyName(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  value={familyName}
+                  onChange={e => setFamilyName(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="Enter family name"
                   required
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <select
+                  value={currency.code}
+                  onChange={e => setCurrency(CURRENCIES.find(c => c.code === e.target.value) || CURRENCIES[0])}
+                  className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                  {CURRENCIES.map(c => (
+                    <option key={c.code} value={c.code}>{c.name} ({c.symbol})</option>
+                  ))}
+                </select>
+              </div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors disabled:bg-teal-300"
+                disabled={creating}
               >
-                Create Family
+                {creating ? 'Creating...' : 'Create Family'}
               </button>
             </form>
           </div>
 
-          {/* Join Family Form */}
           <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Join Existing Family</h2>
-            <form onSubmit={joinFamily} className="space-y-4">
+            <h2 className="text-lg font-semibold text-gray-700 mb-4">Join a Family</h2>
+            <form onSubmit={handleJoinFamily} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Family Code
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Family Join Code</label>
                 <input
                   type="text"
                   value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value)}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  onChange={e => setJoinCode(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="Enter join code"
                   required
                 />
               </div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors disabled:bg-indigo-300"
+                disabled={joining}
               >
-                Join Family
+                {joining ? 'Joining...' : 'Join Family'}
               </button>
             </form>
           </div>
-        </div>
-      )}
-
-      {error && (
-        <div className="mt-4 p-4 bg-red-50 rounded-md">
-          <p className="text-red-700">{error}</p>
+          {error && <div className="text-red-500 text-center">{error}</div>}
         </div>
       )}
     </div>

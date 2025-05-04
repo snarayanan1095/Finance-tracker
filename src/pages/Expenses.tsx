@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { Expense, ExpenseCategory } from '../types';
+import { ExpenseCategory } from '../types';
+import { createExpense } from '../services/firebase';
+import firebase from 'firebase';
 
 const ExpensesPage: React.FC = () => {
-  const { expenses, addExpense, updateExpense, deleteExpense, loading, currentFamily } = useAppContext();
+  const { state, dispatch } = useAppContext();
+  const { expenses, currentFamily, loading } = state;
   const { currentUser } = useAuth();
   const [newExpense, setNewExpense] = useState({
     title: '',
@@ -22,11 +25,13 @@ const ExpensesPage: React.FC = () => {
     if (!currentUser || !currentFamily) return;
 
     try {
-      await addExpense({
+      const createdExpense = await createExpense({
         ...newExpense,
         userId: currentUser.uid,
-        familyId: currentFamily.id
+        familyId: currentFamily.id,
+        date: firebase.firestore.Timestamp.fromDate(new Date(newExpense.date))
       });
+      dispatch({ type: 'ADD_EXPENSE', payload: createdExpense });
       setNewExpense({
         title: '',
         amount: 0,
@@ -51,79 +56,72 @@ const ExpensesPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Expenses</h1>
-      
-      {/* Add Expense Form */}
-      <form onSubmit={handleSubmit} className="mb-8 space-y-4">
+    <div className="p-4 max-w-2xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6 text-white">Expenses</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Title</label>
+          <label className="block text-sm font-medium mb-1 text-white">Title</label>
           <input
             type="text"
             value={newExpense.title}
-            onChange={(e) => setNewExpense({ ...newExpense, title: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            required
+            onChange={e => setNewExpense({ ...newExpense, title: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white placeholder-gray-400"
+            placeholder="Enter title"
           />
         </div>
-        
         <div>
-          <label className="block text-sm font-medium text-gray-700">Amount</label>
+          <label className="block text-sm font-medium mb-1 text-white">Amount</label>
           <input
             type="number"
             value={newExpense.amount}
-            onChange={(e) => setNewExpense({ ...newExpense, amount: parseFloat(e.target.value) })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            required
+            onChange={e => setNewExpense({ ...newExpense, amount: Number(e.target.value) })}
+            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white placeholder-gray-400"
+            placeholder="Enter amount"
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700">Category</label>
+          <label className="block text-sm font-medium mb-1 text-white">Category</label>
           <select
             value={newExpense.category}
-            onChange={(e) => setNewExpense({ ...newExpense, category: e.target.value as ExpenseCategory })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            onChange={e => setNewExpense({ ...newExpense, category: e.target.value as any })}
+            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white"
           >
             {Object.values(ExpenseCategory).map(category => (
               <option key={category} value={category}>{category}</option>
             ))}
           </select>
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700">Date</label>
+          <label className="block text-sm font-medium mb-1 text-white">Date</label>
           <input
             type="date"
             value={newExpense.date}
-            onChange={(e) => setNewExpense({ ...newExpense, date: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-            required
+            onChange={e => setNewExpense({ ...newExpense, date: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white"
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700">Location</label>
+          <label className="block text-sm font-medium mb-1 text-white">Location</label>
           <input
             type="text"
             value={newExpense.location}
-            onChange={(e) => setNewExpense({ ...newExpense, location: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            onChange={e => setNewExpense({ ...newExpense, location: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white placeholder-gray-400"
+            placeholder="Enter location"
           />
         </div>
-
         <div>
-          <label className="block text-sm font-medium text-gray-700">Notes</label>
+          <label className="block text-sm font-medium mb-1 text-white">Notes</label>
           <textarea
             value={newExpense.notes}
-            onChange={(e) => setNewExpense({ ...newExpense, notes: e.target.value })}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+            onChange={e => setNewExpense({ ...newExpense, notes: e.target.value })}
+            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white placeholder-gray-400"
+            placeholder="Enter notes"
           />
         </div>
-
         <button
           type="submit"
-          className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
         >
           Add Expense
         </button>
@@ -144,7 +142,10 @@ const ExpensesPage: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <span className="text-xl font-bold">${expense.amount.toFixed(2)}</span>
                 <button
-                  onClick={() => deleteExpense(expense.id)}
+                  onClick={() => dispatch({
+                    type: 'DELETE_EXPENSE',
+                    payload: expense.id
+                  })}
                   className="text-red-600 hover:text-red-800"
                 >
                   Delete
