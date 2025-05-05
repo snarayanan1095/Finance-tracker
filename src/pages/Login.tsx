@@ -98,23 +98,16 @@ const LoginPage: React.FC = () => {
     }
   };
 
-  const Logo = () => (
-    <div className="flex flex-col items-center space-y-2">
-      <div className="relative">
-        <div className="absolute inset-0 bg-orange-500 rounded-full blur-lg opacity-50"></div>
-        <div className="relative bg-gradient-to-br from-orange-400 to-orange-600 p-4 rounded-full shadow-xl">
-          <Wallet className="h-12 w-12 text-white" />
-        </div>
-      </div>
-      <h1 className="text-2xl font-bold text-white mt-4">Family Finance</h1>
-      <p className="text-gray-400 text-sm">Track, manage, and share expenses together</p>
-    </div>
-  );
-
   return (
     <div className="min-h-screen bg-[#000000] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Logo />
+        <img
+          src="/family-finance-logo.png"
+          alt="Family Finance Logo"
+          className="mx-auto mb-4 w-24 h-24"
+        />
+        <h1 className="text-2xl font-bold text-white text-center">Family Finance</h1>
+        <p className="text-gray-400 text-sm text-center mb-4">Track, manage, and share expenses together</p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">

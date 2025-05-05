@@ -19,8 +19,12 @@ const Sidebar: React.FC = () => {
   return (
     <div className="flex flex-col h-full bg-black text-white w-64 p-4">
       <div className="flex items-center mb-8">
-        <DollarSign className="h-8 w-8 text-orange-500" />
-        <span className="text-xl font-bold ml-2">Family Finance</span>
+        <img
+          src="/family-finance-logo.png"
+          alt="Family Finance Logo"
+          className="w-10 h-10 mr-2"
+        />
+        <span className="text-xl font-bold">Family Finance</span>
       </div>
 
       <nav className="flex-1">

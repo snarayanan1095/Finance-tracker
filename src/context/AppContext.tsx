@@ -6,7 +6,8 @@ import {
   getFamily,
   getExpenses,
   subscribeToFamily,
-  subscribeToExpenses
+  subscribeToExpenses,
+  getUsersByFamilyId
 } from '../services/firebase';
 
 const initialState: AppState = {
@@ -137,6 +138,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (!familyData) return;
 
         dispatch({ type: 'SET_CURRENT_FAMILY', payload: familyData });
+
+        // Get users for the family
+        const users = await getUsersByFamilyId(userData.familyId);
+        dispatch({ type: 'SET_USERS', payload: users });
 
         // Get expenses
         const expenses = await getExpenses(userData.familyId);
