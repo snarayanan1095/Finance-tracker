@@ -17,9 +17,6 @@ const MobileNav: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
       <div className="flex justify-around items-center h-16">
-        <button onClick={onMenuClick} className="mr-2 p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500">
-          <Menu className="h-6 w-6" />
-        </button>
         {menuItems.map((item) => (
           <button
             key={item.path}
