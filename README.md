@@ -1,6 +1,6 @@
 # Family Finance Tracker
 
-A modern web application for families to track and manage their expenses together. Built with React, TypeScript, and Tailwind CSS.
+A modern web application for families to track and manage their expenses together. Built with React, TypeScript, and Tailwind CSS
 
 ![Family Finance Tracker](https://images.pexels.com/photos/4386442/pexels-photo-4386442.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2)
 
