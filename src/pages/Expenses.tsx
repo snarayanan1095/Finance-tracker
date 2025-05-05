@@ -16,7 +16,7 @@ const ExpensesPage: React.FC = () => {
     date: new Date().toISOString().split('T')[0],
     location: '',
     notes: '',
-    userId: currentUser?.uid || '',
+    userId: state.currentUser?.id || '',
     familyId: currentFamily?.id || ''
   });
 
@@ -27,11 +27,10 @@ const ExpensesPage: React.FC = () => {
     try {
       const createdExpense = await createExpense({
         ...newExpense,
-        userId: currentUser.uid,
+        userId: state.currentUser?.id || '',
         familyId: currentFamily.id,
         date: firebase.firestore.Timestamp.fromDate(new Date(newExpense.date))
       });
-      dispatch({ type: 'ADD_EXPENSE', payload: createdExpense });
       setNewExpense({
         title: '',
         amount: 0,
@@ -39,7 +38,7 @@ const ExpensesPage: React.FC = () => {
         date: new Date().toISOString().split('T')[0],
         location: '',
         notes: '',
-        userId: currentUser.uid,
+        userId: state.currentUser?.id || '',
         familyId: currentFamily.id
       });
     } catch (error) {
@@ -56,35 +55,35 @@ const ExpensesPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-2xl mx-auto bg-[#18181b] min-h-screen">
       <h1 className="text-2xl font-bold mb-6 text-white">Expenses</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1 text-white">Title</label>
+          <label className="block text-sm font-medium mb-1 text-[#f3f4f6]">Title</label>
           <input
             type="text"
             value={newExpense.title}
             onChange={e => setNewExpense({ ...newExpense, title: e.target.value })}
-            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white placeholder-gray-400"
+            className="w-full px-3 py-2 border rounded-md border-[#1e293b] bg-[#18181b] text-white placeholder-[#a1a1aa] focus:outline-none focus:ring-2 focus:ring-teal-500"
             placeholder="Enter title"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-white">Amount</label>
+          <label className="block text-sm font-medium mb-1 text-[#f3f4f6]">Amount</label>
           <input
             type="number"
             value={newExpense.amount}
-            onChange={e => setNewExpense({ ...newExpense, amount: Number(e.target.value) })}
-            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white placeholder-gray-400"
+            onChange={e => setNewExpense({ ...newExpense, amount: parseFloat(e.target.value) })}
+            className="w-full px-3 py-2 border rounded-md border-[#1e293b] bg-[#18181b] text-white placeholder-[#a1a1aa] focus:outline-none focus:ring-2 focus:ring-teal-500"
             placeholder="Enter amount"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-white">Category</label>
+          <label className="block text-sm font-medium mb-1 text-[#f3f4f6]">Category</label>
           <select
-            value={newExpense.category}
-            onChange={e => setNewExpense({ ...newExpense, category: e.target.value as any })}
-            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white"
+            value={newExpense.category as ExpenseCategory}
+            onChange={e => setNewExpense({ ...newExpense, category: e.target.value as ExpenseCategory })}
+            className="w-full px-3 py-2 border rounded-md border-[#1e293b] bg-[#18181b] text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
           >
             {Object.values(ExpenseCategory).map(category => (
               <option key={category} value={category}>{category}</option>
@@ -92,21 +91,21 @@ const ExpensesPage: React.FC = () => {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-white">Date</label>
+          <label className="block text-sm font-medium mb-1 text-[#f3f4f6]">Date</label>
           <input
             type="date"
             value={newExpense.date}
             onChange={e => setNewExpense({ ...newExpense, date: e.target.value })}
-            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white"
+            className="w-full px-3 py-2 border rounded-md border-[#1e293b] bg-[#18181b] text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1 text-white">Location</label>
+          <label className="block text-sm font-medium mb-1 text-[#f3f4f6]">Location</label>
           <input
             type="text"
             value={newExpense.location}
             onChange={e => setNewExpense({ ...newExpense, location: e.target.value })}
-            className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-900 text-white placeholder-gray-400"
+            className="w-full px-3 py-2 border rounded-md border-[#1e293b] bg-[#18181b] text-white placeholder-[#a1a1aa] focus:outline-none focus:ring-2 focus:ring-teal-500"
             placeholder="Enter location"
           />
         </div>
@@ -121,39 +120,43 @@ const ExpensesPage: React.FC = () => {
         </div>
         <button
           type="submit"
-          className="px-6 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+          className="w-full px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-orange-300"
+          disabled={loading}
         >
-          Add Expense
+          {loading ? 'Adding...' : 'Add Expense'}
         </button>
       </form>
 
       {/* Expenses List */}
-      <div className="space-y-4">
-        {expenses.map((expense) => (
-          <div key={expense.id} className="bg-white shadow rounded-lg p-4">
-            <div className="flex justify-between items-start">
-              <div>
-                <h3 className="text-lg font-medium">{expense.title}</h3>
-                <p className="text-gray-500">{expense.category}</p>
-                <p className="text-gray-500">{expense.date}</p>
-                {expense.location && <p className="text-gray-500">{expense.location}</p>}
-                {expense.notes && <p className="text-gray-500">{expense.notes}</p>}
-              </div>
-              <div className="flex items-center space-x-2">
-                <span className="text-xl font-bold">${expense.amount.toFixed(2)}</span>
-                <button
-                  onClick={() => expense.id && dispatch({
-                    type: 'DELETE_EXPENSE',
-                    payload: expense.id
-                  })}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-4 text-white">Recent Expenses</h2>
+        {expenses.length === 0 ? (
+          <p className="text-[#a1a1aa]">No expenses yet.</p>
+        ) : (
+          <ul className="space-y-4">
+            {expenses.map((expense) => (
+              <li key={expense.id} className="bg-[#23272f] rounded-lg p-4 text-white flex justify-between items-center">
+                <div>
+                  <div className="font-medium text-white">{expense.title}</div>
+                  <div className="text-sm text-[#a1a1aa]">{expense.category} | {expense.location}</div>
+                  <div className="text-xs text-[#a1a1aa]">{expense.date}</div>
+                </div>
+                <div className="text-right">
+                  <div className="font-semibold text-white">{expense.amount.toFixed(2)}</div>
+                  <button
+                    className="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                    onClick={() => expense.id && dispatch({
+                      type: 'DELETE_EXPENSE',
+                      payload: expense.id
+                    })}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

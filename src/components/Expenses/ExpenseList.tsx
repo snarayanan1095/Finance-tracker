@@ -55,7 +55,7 @@ const ExpenseList: React.FC = () => {
         
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center justify-center space-x-2 bg-teal-500 text-white px-4 py-2 rounded-lg hover:bg-teal-600 transition-colors"
+          className="flex items-center justify-center space-x-2 bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors"
         >
           <Plus size={18} />
           <span>Add Expense</span>

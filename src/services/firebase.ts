@@ -450,4 +450,11 @@ export const joinFamilyByCode = async (joinCode: string, userData: {
   }
   updatedFamilyData.id = familyDoc.id;
   return convertFamilyFromFirestore(updatedFamilyData);
+};
+
+// Fetch all users for a given familyId
+export const getUsersByFamilyId = async (familyId: string): Promise<User[]> => {
+  const usersQuery = db.collection('users').where('familyId', '==', familyId);
+  const usersSnapshot = await usersQuery.get();
+  return usersSnapshot.docs.map(userDoc => convertUserFromFirestore(userDoc.data() as FirestoreUser));
 }; 

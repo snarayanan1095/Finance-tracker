@@ -17,9 +17,9 @@ const Sidebar: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-800 text-white w-64 p-4">
+    <div className="flex flex-col h-full bg-black text-white w-64 p-4">
       <div className="flex items-center mb-8">
-        <DollarSign className="h-8 w-8 text-teal-500" />
+        <DollarSign className="h-8 w-8 text-orange-500" />
         <span className="text-xl font-bold ml-2">Family Finance</span>
       </div>
 
@@ -28,7 +28,7 @@ const Sidebar: React.FC = () => {
           <li>
             <Link
               to="/"
-              className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
             >
               <Home className="h-5 w-5 mr-3" />
               Dashboard
@@ -37,7 +37,7 @@ const Sidebar: React.FC = () => {
           <li>
             <Link
               to="/expenses"
-              className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
             >
               <DollarSign className="h-5 w-5 mr-3" />
               Expenses
@@ -46,7 +46,7 @@ const Sidebar: React.FC = () => {
           <li>
             <Link
               to="/family"
-              className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
             >
               <Users className="h-5 w-5 mr-3" />
               Family
@@ -55,7 +55,7 @@ const Sidebar: React.FC = () => {
           <li>
             <Link
               to="/reports"
-              className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
             >
               <BarChart2 className="h-5 w-5 mr-3" />
               Reports
@@ -64,7 +64,7 @@ const Sidebar: React.FC = () => {
           <li>
             <Link
               to="/settings"
-              className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors"
+              className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
             >
               <Settings className="h-5 w-5 mr-3" />
               Settings
@@ -75,7 +75,7 @@ const Sidebar: React.FC = () => {
 
       <button
         onClick={handleLogout}
-        className="flex items-center px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg transition-colors mt-auto"
+        className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors mt-auto"
       >
         <LogOut className="h-5 w-5 mr-3" />
         Sign Out

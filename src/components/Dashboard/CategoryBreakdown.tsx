@@ -78,7 +78,7 @@ const CategoryBreakdown: React.FC = () => {
               <div key={category} className="space-y-1">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center">
-                    <div className="p-1.5 rounded-full bg-teal-100 text-teal-600 mr-2">
+                    <div className="p-1.5 rounded-full bg-orange-100 text-orange-600 mr-2">
                       <CategoryIcon size={16} />
                     </div>
                     <span className="text-sm font-medium text-gray-700">{category}</span>
@@ -95,7 +95,7 @@ const CategoryBreakdown: React.FC = () => {
                 
                 <div className="w-full bg-gray-100 rounded-full h-2">
                   <div 
-                    className="bg-teal-500 h-2 rounded-full"
+                    className="bg-orange-500 h-2 rounded-full"
                     style={{ width: `${data.percentage}%` }}
                   />
                 </div>

@@ -16,10 +16,36 @@ const ExpenseSummary: React.FC = () => {
     0
   );
   
+  // Helper to normalize date to 'YYYY-MM-DD'
+  function normalizeDate(date: any): string {
+    if (!date) return '';
+    if (typeof date === 'string') {
+      // If already in YYYY-MM-DD, return as is
+      if (/^\d{4}-\d{2}-\d{2}$/.test(date)) return date;
+      // If ISO string, extract date part
+      if (date.includes('T')) return date.split('T')[0];
+      // If US format (MM/DD/YYYY), convert
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(date)) {
+        const [month, day, year] = date.split('/');
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      return date;
+    }
+    if (date.toDate) {
+      // Firestore Timestamp
+      const d = date.toDate();
+      return d.toISOString().split('T')[0];
+    }
+    if (date instanceof Date) {
+      return date.toISOString().split('T')[0];
+    }
+    return '';
+  }
+
   // Calculate today's expenses
   const today = new Date().toISOString().split('T')[0];
   const todayExpenses = familyExpenses
-    .filter(expense => expense.date === today)
+    .filter(expense => normalizeDate(expense.date) === today)
     .reduce((sum, expense) => sum + expense.amount, 0);
   
   // Calculate this month's expenses

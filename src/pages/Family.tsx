@@ -81,40 +81,17 @@ const FamilyPage: React.FC = () => {
   };
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-2xl mx-auto bg-[#18181b] min-h-screen">
       <h1 className="text-2xl font-bold mb-6 text-white">Family Information</h1>
       {state.currentFamily ? (
         <div className="space-y-4">
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">Family ID</h2>
+          <div className="bg-[#23272f] shadow rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-[#f3f4f6] mb-2">Join Code</h2>
             <div className="flex items-center justify-between">
-              <span className="text-lg font-mono bg-gray-50 px-3 py-2 rounded">{state.currentFamily.id}</span>
-              <button
-                onClick={handleCopyId}
-                className="ml-4 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none flex items-center"
-              >
-                {copiedId ? (
-                  <>
-                    <Check size={16} className="mr-1" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy size={16} className="mr-1" />
-                    Copy ID
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-2">Join Code</h2>
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-mono bg-gray-50 px-3 py-2 rounded">{state.currentFamily.joinCode}</span>
+              <span className="text-lg font-mono bg-[#1e293b] px-3 py-2 rounded text-white">{state.currentFamily.joinCode}</span>
               <button
                 onClick={handleCopyCode}
-                className="ml-4 px-3 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none flex items-center"
+                className="ml-4 px-3 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 flex items-center"
               >
                 {copiedCode ? (
                   <>
@@ -131,14 +108,14 @@ const FamilyPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white bg-opacity-10 shadow rounded-lg p-6 mt-6">
+          <div className="bg-[#23272f] bg-opacity-90 shadow rounded-lg p-6 mt-6">
             <h2 className="text-lg font-semibold mb-2 text-white">Family Members</h2>
             <ul>
               {state.currentFamily?.members.map(member => (
-                <li key={member.id} className="py-2 border-b border-gray-700 last:border-b-0 flex flex-col sm:flex-row sm:items-center sm:justify-between text-white">
+                <li key={member.id} className="py-2 border-b border-[#23272f] last:border-b-0 flex flex-col sm:flex-row sm:items-center sm:justify-between text-white">
                   <span>
                     <span className="font-medium text-white">{member.name}</span>
-                    <span className="ml-2 text-gray-300 text-sm">{member.email}</span>
+                    <span className="ml-2 text-[#a1a1aa] text-sm">{member.email}</span>
                   </span>
                   {member.id === state.currentFamily?.ownerId && (
                     <span className="ml-2 text-xs bg-teal-700 text-white px-2 py-0.5 rounded">Owner</span>
@@ -149,30 +126,33 @@ const FamilyPage: React.FC = () => {
                 </li>
               ))}
             </ul>
+            <div className="mt-4 text-xs text-[#a1a1aa]">
+              Family ID: <span className="font-mono">{state.currentFamily.id}</span>
+            </div>
           </div>
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Create a Family</h2>
+          <div className="bg-[#23272f] shadow rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-[#f3f4f6] mb-4">Create a Family</h2>
             <form onSubmit={handleCreateFamily} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Family Name</label>
+                <label className="block text-sm font-medium text-[#f3f4f6] mb-1">Family Name</label>
                 <input
                   type="text"
                   value={familyName}
                   onChange={e => setFamilyName(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border rounded-md border-[#1e293b] bg-[#18181b] text-white placeholder-[#a1a1aa] focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="Enter family name"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <label className="block text-sm font-medium text-[#f3f4f6] mb-1">Currency</label>
                 <select
                   value={currency.code}
                   onChange={e => setCurrency(CURRENCIES.find(c => c.code === e.target.value) || CURRENCIES[0])}
-                  className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border rounded-md border-[#1e293b] bg-[#18181b] text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                 >
                   {CURRENCIES.map(c => (
                     <option key={c.code} value={c.code}>{c.name} ({c.symbol})</option>
@@ -189,16 +169,16 @@ const FamilyPage: React.FC = () => {
             </form>
           </div>
 
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-700 mb-4">Join a Family</h2>
+          <div className="bg-[#23272f] shadow rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-[#f3f4f6] mb-4">Join a Family</h2>
             <form onSubmit={handleJoinFamily} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Family Join Code</label>
+                <label className="block text-sm font-medium text-[#f3f4f6] mb-1">Family Join Code</label>
                 <input
                   type="text"
                   value={joinCode}
                   onChange={e => setJoinCode(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md border-gray-300 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-3 py-2 border rounded-md border-[#1e293b] bg-[#18181b] text-white placeholder-[#a1a1aa] focus:outline-none focus:ring-2 focus:ring-teal-500"
                   placeholder="Enter join code"
                   required
                 />
