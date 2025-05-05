@@ -33,11 +33,11 @@ const RecentExpenses: React.FC = () => {
       
       {recentExpenses.length > 0 ? (
         <div className="space-y-4">
-          {recentExpenses.map((expense) => {
+          {recentExpenses.map((expense, idx) => {
             const CategoryIcon = getCategoryIcon(expense.category);
             
             return (
-              <div key={expense.id} className="flex items-center justify-between">
+              <div key={expense.id || idx} className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="p-2 rounded-full bg-gray-100">
                     <CategoryIcon size={16} className="text-gray-600" />
@@ -52,7 +52,7 @@ const RecentExpenses: React.FC = () => {
                   </div>
                 </div>
                 <p className="font-semibold text-gray-800">
-                  {formatCurrency(expense.amount, state.currentFamily?.currency)}
+                  {formatCurrency(expense.amount, state.currentFamily?.defaultCurrency)}
                 </p>
               </div>
             );
