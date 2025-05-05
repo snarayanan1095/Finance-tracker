@@ -13,7 +13,6 @@ A modern web application for families to track and manage their expenses togethe
 - 👥 Add multiple family members to track expenses together
 - 📈 Real-time expense summaries and category analysis
 - 🔒 User authentication and family management
-- ⚡ Fast and intuitive interface
 
 ## Getting Started
 
