@@ -134,8 +134,8 @@ const ExpensesPage: React.FC = () => {
           <p className="text-[#a1a1aa]">No expenses yet.</p>
         ) : (
           <ul className="space-y-4">
-            {expenses.map((expense) => (
-              <li key={expense.id} className="bg-[#23272f] rounded-lg p-4 text-white flex justify-between items-center">
+            {expenses.map((expense, idx) => (
+              <li key={expense.id || idx} className="bg-[#23272f] rounded-lg p-4 text-white flex justify-between items-center">
                 <div>
                   <div className="font-medium text-white">{expense.title}</div>
                   <div className="text-sm text-[#a1a1aa]">{expense.category} | {expense.location}</div>

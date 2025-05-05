@@ -4,13 +4,18 @@ import { Home, DollarSign, Users, BarChart2, Settings, LogOut } from 'lucide-rea
 import { useAppContext } from '../../context/AppContext';
 import { signOut } from '../../services/firebase';
 
-const Sidebar: React.FC = () => {
+type SidebarProps = {
+  onNavigate?: () => void;
+};
+
+const Sidebar: React.FC<SidebarProps> = ({ onNavigate }) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await signOut();
       navigate('/login');
+      if (onNavigate) onNavigate();
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -33,6 +38,7 @@ const Sidebar: React.FC = () => {
             <Link
               to="/"
               className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
+              onClick={onNavigate}
             >
               <Home className="h-5 w-5 mr-3" />
               Dashboard
@@ -42,6 +48,7 @@ const Sidebar: React.FC = () => {
             <Link
               to="/expenses"
               className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
+              onClick={onNavigate}
             >
               <DollarSign className="h-5 w-5 mr-3" />
               Expenses
@@ -51,6 +58,7 @@ const Sidebar: React.FC = () => {
             <Link
               to="/family"
               className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
+              onClick={onNavigate}
             >
               <Users className="h-5 w-5 mr-3" />
               Family
@@ -60,6 +68,7 @@ const Sidebar: React.FC = () => {
             <Link
               to="/reports"
               className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
+              onClick={onNavigate}
             >
               <BarChart2 className="h-5 w-5 mr-3" />
               Reports
@@ -69,6 +78,7 @@ const Sidebar: React.FC = () => {
             <Link
               to="/settings"
               className="flex items-center px-4 py-2 text-gray-300 hover:bg-[#18181b] rounded-lg transition-colors"
+              onClick={onNavigate}
             >
               <Settings className="h-5 w-5 mr-3" />
               Settings

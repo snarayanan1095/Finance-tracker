@@ -19,7 +19,7 @@ const MobileSidebar: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         >
           ×
         </button>
-        <Sidebar />
+        <Sidebar onNavigate={onClose} />
       </div>
     </div>
   );
