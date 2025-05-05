@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { signIn, signUp, createUserDocument, createFamilyDocument, updateFamilyMembers } from '../services/firebase';
+import { signIn, signUp, createUserDocument, createFamilyDocument, updateFamilyMembers, joinFamilyByCode } from '../services/firebase';
 import { CURRENCIES } from '../utils/helpers';
 
 const LoginPage: React.FC = () => {
@@ -56,8 +56,12 @@ const LoginPage: React.FC = () => {
 
         let familyRef;
         if (isJoiningFamily) {
-          // Join existing family
-          familyRef = await updateFamilyMembers(joinFamilyId, user.uid);
+          // Join existing family by code
+          familyRef = await joinFamilyByCode(joinFamilyId, {
+            id: user.uid,
+            name,
+            email: user.email
+          });
         } else {
           // Create new family
           familyRef = await createFamilyDocument({
