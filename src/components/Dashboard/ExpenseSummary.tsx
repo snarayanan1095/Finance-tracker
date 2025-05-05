@@ -1,5 +1,5 @@
 import React from 'react';
-import { CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
+import { CreditCard, TrendingUp, TrendingDown, Calendar } from 'lucide-react';
 import { useAppContext } from '../../context/AppContext';
 import { formatCurrency } from '../../utils/helpers';
 
@@ -105,11 +105,7 @@ const ExpenseSummary: React.FC = () => {
       
       <div className="bg-white rounded-lg shadow-sm p-6 flex items-center">
         <div className="bg-orange-100 rounded-full p-3 mr-4">
-          {isIncrease ? (
-            <TrendingUp className="text-orange-600" size={24} />
-          ) : (
-            <TrendingDown className="text-green-600" size={24} />
-          )}
+          <Calendar className="text-orange-600" size={24} />
         </div>
         <div>
           <p className="text-sm text-gray-500">This Month</p>
