@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, DollarSign, Users, BarChart, Settings } from 'lucide-react';
+import { Home, DollarSign, Users, BarChart, Settings, Menu } from 'lucide-react';
 
-const MobileNav: React.FC = () => {
+const MobileNav: React.FC<{ onMenuClick?: () => void }> = ({ onMenuClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -17,6 +17,9 @@ const MobileNav: React.FC = () => {
   return (
     <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
       <div className="flex justify-around items-center h-16">
+        <button onClick={onMenuClick} className="mr-2 p-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <Menu className="h-6 w-6" />
+        </button>
         {menuItems.map((item) => (
           <button
             key={item.path}
