@@ -17,6 +17,7 @@ export interface EmailIntegration {
 
 // === API helpers ===
 // In dev, Vite runs on 517x, Express on 5000.  Include protocol so fetch goes cross-origin.
+// Backend base URL; configure in .env (VITE_API_BASE) for prod builds.
 const API_BASE = (import.meta.env.VITE_API_BASE as string) || 'http://localhost:5000';
 
 class EmailService {
