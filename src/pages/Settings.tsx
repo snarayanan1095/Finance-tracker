@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { signOut } from '../services/firebase';
 import { CURRENCIES } from '../utils/helpers';
+import EmailIntegration from '../components/EmailIntegration';
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
-  const [selectedCurrency, setSelectedCurrency] = useState(
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(
     (currentUser as any)?.currency || CURRENCIES[0]
   );
 
@@ -47,24 +48,30 @@ const SettingsPage: React.FC = () => {
           <h2 className="text-lg font-medium mb-4">Preferences</h2>
           <div className="space-y-4">
             <div>
-              <label htmlFor="currency" className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700">
                 Default Currency
               </label>
-              <select
-                id="currency"
-                value={selectedCurrency.code}
-                onChange={(e) => {
-                  const currency = CURRENCIES.find(c => c.code === e.target.value);
-                  if (currency) setSelectedCurrency(currency);
-                }}
-                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-              >
-                {CURRENCIES.map((currency) => (
-                  <option key={currency.code} value={currency.code}>
-                    {currency.name} ({currency.symbol})
-                  </option>
-                ))}
-              </select>
+              <div className="bg-white shadow rounded-lg p-6 space-y-6">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">Currency</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Set your preferred currency for all transactions
+                  </p>
+                  <select
+                    value={selectedCurrency}
+                    onChange={(e) => setSelectedCurrency(e.target.value)}
+                    className="mt-2 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  >
+                    {CURRENCIES.map((currency) => (
+                      <option key={currency} value={currency}>
+                        {currency}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <EmailIntegration />
             </div>
           </div>
         </div>
