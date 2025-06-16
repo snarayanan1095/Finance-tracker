@@ -8,6 +8,17 @@ const SCOPES = [
 export class ServerGmailService {
   private oauth2Client;
 
+  /**
+   * Build the Google OAuth consent URL for the given user.
+   */
+  public generateAuthUrl(state: string) {
+    return this.oauth2Client.generateAuthUrl({
+      access_type: 'offline',
+      scope: SCOPES,
+      state
+    });
+  }
+
   constructor() {
     // Hardcoded credentials (dev only - replace before committing)
     this.oauth2Client = new google.auth.OAuth2(
@@ -28,6 +39,15 @@ export class ServerGmailService {
     token_type?: string;
   }) {
     this.oauth2Client.setCredentials(tokens);
+  }
+
+  /**
+   * Exchange OAuth code for tokens and store them.
+   */
+  public async exchangeCode(code: string) {
+    const { tokens } = await this.oauth2Client.getToken(code);
+    this.setCredentials(tokens);
+    return tokens;
   }
 
   private gmail() {

@@ -1,134 +1,66 @@
-import { db } from '../config/firebase';
 import { User } from '../types';
-import nodemailer from 'nodemailer';
-import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
 
-interface EmailIntegrationConfig {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-}
+/*
+ * Lightweight browser-side email integration service.
+ * This file MUST NOT import any Node-only libraries (e.g. googleapis, nodemailer)
+ * because it is bundled into the React app and executed in the browser.
+ *
+ * The real Gmail / OAuth work should be handled by the Express server.
+ * Here we simply proxy requests to that server.
+ */
 
+// === Types ===
 export interface EmailIntegration {
   enabled: boolean;
-  lastSync: Date | null;
-  accessToken: string | null;
-  refreshToken: string | null;
+  lastSync: string | null;
 }
 
-export class EmailService {
-  private config: EmailIntegrationConfig;
-  private oauth2Client: OAuth2Client;
+// === API helpers ===
+// In dev, Vite runs on 517x, Express on 5000.  Include protocol so fetch goes cross-origin.
+const API_BASE = (import.meta.env.VITE_API_BASE as string) || 'http://localhost:5000';
 
-  constructor(config: EmailIntegrationConfig) {
-    this.config = config;
-    this.oauth2Client = new OAuth2Client(config.clientId, config.clientSecret, config.redirectUri);
-  }
-
+class EmailService {
+  /*
+   * Initiates Gmail OAuth flow on the server and returns the Google consent URL to redirect the user to.
+   */
   async authenticate(user: User): Promise<string> {
-    // Generate OAuth2 authorization URL
-    const authUrl = this.oauth2Client.generateAuthUrl({
-      access_type: 'offline',
-      scope: ['https://www.googleapis.com/auth/gmail.readonly'],
-      state: user.id
+    const res = await fetch(`${API_BASE}/api/email/auth`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(user)
     });
-    
-    // Save the pending authentication state
-    const emailIntegration = {
-      enabled: false,
-      lastSync: null,
-      accessToken: null,
-      refreshToken: null
-    };
-    await db.collection('users').doc(user.id).update({
-      emailIntegration
-    });
-
+    if (!res.ok) {
+      const { error } = await res.json();
+      throw new Error(error || 'Failed to start email authentication');
+    }
+    const { authUrl } = await res.json();
     return authUrl;
   }
 
-  async handleCallback(code: string, userId: string): Promise<void> {
-    try {
-      const { tokens } = await this.oauth2Client.getToken(code);
-      
-      // Save tokens to user's document
-      await db.collection('users').doc(userId).update({
-        emailIntegration: {
-          enabled: true,
-          lastSync: new Date(),
-          accessToken: tokens.access_token,
-          refreshToken: tokens.refresh_token
-        }
-      });
-    } catch (error) {
-      console.error('Error handling OAuth callback:', error);
-      throw error;
+  /**
+   * Complete OAuth flow after Google redirects back with ?code.
+   */
+  async handleCallback(code: string, state: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/api/email/callback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, state })
+    });
+    if (!res.ok) {
+      const { error } = await res.json();
+      throw new Error(error || 'Failed to complete email authentication');
     }
   }
 
-  async syncEmails(userId: string): Promise<void> {
-    try {
-      const userDoc = await db.collection('users').doc(userId).get();
-      const userData = userDoc.data();
-      
-      if (!userData?.emailIntegration?.enabled || !userData.emailIntegration.accessToken) {
-        throw new Error('Email integration not enabled or not authenticated');
-      }
-
-      // Set credentials
-      this.oauth2Client.setCredentials({
-        access_token: userData.emailIntegration.accessToken,
-        refresh_token: userData.emailIntegration.refreshToken
-      });
-
-      // Initialize Gmail API client
-      const gmail = google.gmail('v1');
-      
-      // Set credentials
-      await this.oauth2Client.setCredentials({
-        access_token: userData.emailIntegration.accessToken,
-        refresh_token: userData.emailIntegration.refreshToken
-      });
-
-      // Get unread emails using Gmail API
-      const response = await gmail.users.messages.list({
-        userId: 'me',
-        q: 'is:unread',
-        maxResults: 50
-      });
-
-      // Process emails
-      const messages = response.data.messages || [];
-      for (const message of messages) {
-        // TODO: Implement email parsing logic here
-        // This would involve:
-        // 1. Extracting relevant financial information from emails
-        // 2. Creating corresponding expense entries
-        // 3. Marking emails as read
-      }
-
-      // Update last sync time
-      await db.collection('users').doc(userId).update({
-        'emailIntegration.lastSync': new Date()
-      });
-    } catch (error) {
-      console.error('Error syncing emails:', error);
-      throw error;
+  // Optionally trigger a manual sync (server handles heavy lifting)
+  async syncEmails(): Promise<void> {
+    const res = await fetch(`${API_BASE}/api/email/sync`, { method: 'POST' });
+    if (!res.ok) {
+      const { error } = await res.json();
+      throw new Error(error || 'Failed to sync emails');
     }
-  }
-
-  async scheduleSync(userId: string, interval: number = 3600000): Promise<void> {
-    // Schedule periodic sync using Firebase Cloud Functions or a background worker
-    // This would typically be implemented as a separate Cloud Function
-    // For now, we'll just return a success message
-    console.log(`Scheduled email sync for user ${userId} with interval ${interval}ms`);
   }
 }
 
-// Export a singleton instance
-export const emailService = new EmailService({
-  clientId: process.env.EMAIL_CLIENT_ID || '',
-  clientSecret: process.env.EMAIL_CLIENT_SECRET || '',
-  redirectUri: process.env.EMAIL_REDIRECT_URI || ''
-});
+// Singleton instance
+export const emailService = new EmailService();

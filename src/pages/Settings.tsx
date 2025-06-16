@@ -9,7 +9,7 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [selectedCurrency, setSelectedCurrency] = useState<string>(
-    (currentUser as any)?.currency || CURRENCIES[0]
+    (currentUser as any)?.currency?.code || CURRENCIES[0].code
   );
 
   const handleSignOut = async () => {
@@ -63,8 +63,8 @@ const SettingsPage: React.FC = () => {
                     className="mt-2 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                   >
                     {CURRENCIES.map((currency) => (
-                      <option key={currency} value={currency}>
-                        {currency}
+                      <option key={currency.code} value={currency.code}>
+                        {`${currency.symbol} - ${currency.name}`}
                       </option>
                     ))}
                   </select>
