@@ -12,6 +12,9 @@ export default defineConfig({
     }
   },
   plugins: [react()],
+  define: {
+    'process.env': {}
+  },
   build: {
     chunkSizeWarningLimit: 1000,
   }

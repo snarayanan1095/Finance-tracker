@@ -3,13 +3,13 @@ import firebase from 'firebase';
 // Your web app's Firebase configuration
 // Replace these with your Firebase project configuration
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+    apiKey: 'AIzaSyAvIO6A8WjL5CpADaVaOhl6ujNj2wwRiW0',
+    authDomain: 'finance-tracker-b7ae8.firebaseapp.com',
+    projectId: 'finance-tracker-b7ae8',
+    storageBucket: 'finance-tracker-b7ae8.appspot.com',
+    messagingSenderId: '870365046438',
+    appId: '1:870365046438:web:234119fa5dfe49ac173667',
+    measurementId: 'G-Z34N6N2YZX'
 };
 
 // Initialize Firebase

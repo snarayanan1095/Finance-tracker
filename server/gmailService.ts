@@ -1,5 +1,4 @@
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
 
 const SCOPES = [
   'https://www.googleapis.com/auth/gmail.readonly',
@@ -7,13 +6,14 @@ const SCOPES = [
 ];
 
 export class ServerGmailService {
-  private oauth2Client: OAuth2Client;
+  private oauth2Client;
 
   constructor() {
-    this.oauth2Client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
-      'postmessage' // server-side, no browser redirect
+    // Hardcoded credentials (dev only - replace before committing)
+    this.oauth2Client = new google.auth.OAuth2(
+      '328428322366-2ehl1b97fihr23v810ga36rdeli6r1vo.apps.googleusercontent.com',
+      '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',
+      'postmessage'
     );
   }
 
@@ -47,7 +47,7 @@ export class ServerGmailService {
     await this.gmail().users.messages.modify({
       userId,
       id: messageId,
-      resource: { removeLabelIds: ['UNREAD'] }
+      requestBody: { removeLabelIds: ['UNREAD'] }
     });
   }
 }

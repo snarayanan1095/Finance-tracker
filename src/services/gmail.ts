@@ -1,5 +1,4 @@
 import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
 
 // Gmail API scopes
 const SCOPES = [
@@ -8,13 +7,13 @@ const SCOPES = [
 ];
 
 export class GmailService {
-  private readonly oauth2Client: OAuth2Client;
+  private readonly oauth2Client;
 
   constructor() {
     // Initialize OAuth2 client with your credentials from Google Cloud Console
-    this.oauth2Client = new OAuth2Client(
-      process.env.GOOGLE_CLIENT_ID,
-      process.env.GOOGLE_CLIENT_SECRET,
+    this.oauth2Client = new google.auth.OAuth2(
+      '328428322366-2ehl1b97fihr23v810ga36rdeli6r1vo.apps.googleusercontent.com',
+      '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',
       `${window.location.origin}/api/auth/callback`
     );
   }
@@ -42,7 +41,8 @@ export class GmailService {
   // Get Gmail API client
   private getGmailClient(): any {
     return google.gmail({
-      version: 'v1'
+      version: 'v1',
+      auth: this.oauth2Client
     });
   }
 
@@ -63,7 +63,7 @@ export class GmailService {
     await gmail.users.messages.modify({
       userId,
       id: messageId,
-      resource: {
+      requestBody: {
         removeLabelIds: ['UNREAD']
       }
     });
