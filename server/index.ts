@@ -3,7 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
 import admin from 'firebase-admin';
-import { ServerGmailService } from './gmailService';
+import { ServerGmailService } from './gmailService.ts';
 
 dotenv.config();
 
@@ -41,6 +41,10 @@ app.use(
 
 app.use(express.json());
 
+// Health check / root route
+app.get('/', (_req, res) => res.send('Email API running'));
+
+
 const gmailService = new ServerGmailService();
 
 // Helper – fetch stored Gmail tokens and prime gmailService
@@ -70,7 +74,9 @@ app.get('/api/gmail/unread', async (req, res) => {
   }
 });
 
-const PORT = process.env.PORT || // POST /api/email/auth  { user: { uid, email, … } }
+const PORT = process.env.PORT || 5175;
+
+// POST /api/email/auth  { user: { uid, email, … } }
 app.post('/api/email/auth', async (req, res) => {
   const state = req.body.user.uid;              // keep it simple for now
   const authUrl = gmailService.generateAuthUrl(state);
